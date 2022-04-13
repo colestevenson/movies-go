@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import {BrowserRouter as Router, Switch, Route, Link} from 'react-router-dom';
 import HomeFunc from './components/HomeFunc';
 import MoviesFunc from './components/MoviesFunc';
@@ -9,46 +9,37 @@ import OneMovieFunc from './components/OneMovieFunc';
 import OneGenreFunc from './components/OneGenreFunc';
 import EditMovieFunc from './components/EditMovieFunc';
 
-export default class App extends Component {
+export default function AppFunc(props) {
+  
+  const [jwt, setJWT] = useState("");
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      jwt: "",
-    }
-
-    this.handleJWTChange = this.handleJWTChange.bind(this);
-  }
-
-  componentDidMount() {
+  useEffect(() => {
     let t = window.localStorage.getItem("jwt");
     if (t) {
-      if (this.state.jwt === "") {
-        this.setState({jwt: JSON.parse(t)});
+      if (jwt === "") {
+        setJWT(JSON.parse(t));
       }
     }
+  }, [jwt])
+
+  function handleJWTChange(jwt) {
+    setJWT(jwt);
   }
 
-  handleJWTChange = (jwt) => {
-    this.setState({jwt: jwt});
-  }
-
-  logout = () => {
-    this.setState({jwt: ""});
+  function logout() {
+    setJWT("");
     window.localStorage.removeItem("jwt");
   }
 
-  render() {
+  let loginLink;
+  if (jwt === "") {
+    loginLink = <Link to="/login">Login</Link>
+  } else {
+    loginLink = <Link to="/logout" onClick={logout}>Logout</Link>
+  }
 
-    let loginLink;
-    if (this.state.jwt === "") {
-      loginLink = <Link to="/login">Login</Link>
-    } else {
-      loginLink = <Link to="/logout" onClick={this.logout}>Logout</Link>
-    }
-
-    return (
-      <Router>
+  return(
+    <Router>
         <div className='container'>
           <div className='row'>
             <div className='col mt-3'>
@@ -76,7 +67,7 @@ export default class App extends Component {
                     <Link to="/genres">Genres</Link>
                   </li>
 
-                  {this.state.jwt !== "" && 
+                  {jwt !== "" && 
                     <Fragment>
                       <li className='list-group-item'>
                         <Link to="/admin/movie/0">Add Movie</Link>
@@ -88,9 +79,6 @@ export default class App extends Component {
                     </Fragment>
                   }
                 </ul>
-                <pre>
-                  {JSON.stringify(this.state, null, 3)}
-                </pre>
               </nav>
             </div>
 
@@ -104,7 +92,7 @@ export default class App extends Component {
 
                 <Route path="/genre/:id" component={OneGenreFunc} />
 
-                <Route exact path="/login" component={(props) => <LoginFunc {...props} handleJWTChange={this.handleJWTChange} />} />
+                <Route exact path="/login" component={(props) => <LoginFunc {...props} handleJWTChange={handleJWTChange} />} />
 
                 <Route exact path="/genres">
                   <GenresFunc />
@@ -113,7 +101,7 @@ export default class App extends Component {
                 <Route 
                   path="/admin/movie/:id" 
                   component={(props) => (
-                    <EditMovieFunc {...props} jwt={this.state.jwt} 
+                    <EditMovieFunc {...props} jwt={jwt} 
                     />
                   )}
                 />
@@ -121,7 +109,7 @@ export default class App extends Component {
                 <Route 
                   path="/admin"
                   component={(props) => (
-                    <AdminFunc {...props} jwt={this.state.jwt}
+                    <AdminFunc {...props} jwt={jwt}
                     />
                   )}
                 />
@@ -134,6 +122,5 @@ export default class App extends Component {
           </div>
         </div>
       </Router>
-    );
-  }
+  );
 }
